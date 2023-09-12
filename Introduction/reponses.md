@@ -180,3 +180,138 @@ Vous pouvez observer le contenu de ces fichiers générés en ouvrant chaque fic
 - Le fichier prétraité contient le code source après le prétraitement, c'est-à-dire après l'inclusion des fichiers d'en-tête et le remplacement des macros.
 - Le fichier assembleur contient le code en langage d'assemblage correspondant au code source C.
 - Le fichier objet est une représentation binaire du code source C prêt à être lié avec d'autres fichiers objets pour créer un exécutable final.
+
+## __Exercice 7 (TD)__
+> On souhaite réaliser le calcul de la moyenne d’une suite de 5 nombres flottants saisis au clavier.
+> 1. Ecrire l’algorithme de ce programme.
+> 2. Ecrire le programme C correspondant.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // Déclarer une variable pour stocker la somme des nombres
+    float total = 0.0;
+
+    // Boucle pour demander à l'utilisateur d'entrer 5 nombres
+    for (int i = 0; i < 5; i++) {
+        float newFloat;  // Déclarer une variable pour stocker chaque nouveau nombre
+
+        // Demander à l'utilisateur d'entrer un nombre
+        printf("Entrez un nombre : ");
+        scanf("%f", &newFloat);
+
+        // Ajouter le nouveau nombre à la somme totale
+        total += newFloat;
+    }
+
+    // Calculer et afficher la moyenne des nombres
+    printf("La moyenne est de %f\n", total / 5);
+}
+```
+## __Exercice 8 (TD)__
+> En utilisant la fonction atoi qui convertit une chaîne en entier, réaliser le calcul de la moyenne de la suite des paramètres passés à la ligne de commande : moy 5 8 12 3.
+> 1. Ecrire l’algorithme de ce programme.
+> 2. Ecrire le programme C correspondant.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    int total = 0;  // Déclarer une variable pour stocker la somme des nombres
+
+    // Boucle pour parcourir les arguments de la ligne de commande
+    for (int i = 1; i < argc; i++) {
+        // Convertir chaque argument en entier et l'ajouter à la somme totale
+        total += atoi(argv[i]);
+    }
+
+    // Calculer et afficher la moyenne des nombres en divisant par le nombre d'arguments
+    printf("La moyenne est de %d\n", total / (argc - 1));
+}
+```
+
+## __Exercice 9 (TD)__
+> Dans certains fichiers structurés, les articles sont représentés sur une ligne dont les champs sont séparés par
+> un caractère séparateur (fichiers .csv). On souhaite écrire une fonction char **strsplit(const char *s,
+> const char sep) qui découpe une chaîne de caractères correspondant à une ligne csv en un tableau de chaînes
+> dynamiques. Par exemple, l’appel à strsplit("/bin:/usr/bin:/usr/local/bin",':') doit générer le tableau suivant :
+> 0 --> /bin
+> 1 --> /usr/bin
+> 2 --> /usr/local/bin
+> 3 NULL
+> On écrira également une fonction main qui lira la chaîne et le séparateur depuis la ligne de commande.
+> 1. Ecrire l’algorithme de ce programme.
+> 2. Ecrire le programme C correspondant.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Définition d'une fonction pour diviser une chaîne en fonction d'un séparateur
+char **strsplit(const char *s, const char sep) 
+{
+	int index = 0;
+	
+	int sepCount = 0;  // Compteur du nombre de séparateurs trouvés
+	int sepIndexes = 0;  // Compteur des indexes des séparateurs
+	int sepCountIndexes[strlen(s)];  // Tableau pour stocker les indexes des séparateurs
+	
+	// Parcours de la chaîne pour identifier les séparateurs
+	while (s[index] != '\0') {
+		if (s[index] == sep) {
+			sepCountIndexes[sepIndexes] = index;
+			sepIndexes++;
+			sepCount++;
+		} else if (index == strlen(s) - 1) {
+		    sepCountIndexes[sepIndexes] = index + 1;
+			sepIndexes++;
+			sepCount++;
+		}
+ 		index++;
+	}
+	
+	char **output;
+	output = (char **) malloc((sepCount + 1) * sizeof(char *));  // Allouer de la mémoire pour le tableau de pointeurs de chaînes
+	
+	int currentIndex = 0;
+	for (int i = 0; i < sepCount; i++) {
+	    
+	    // Allouer de la mémoire pour chaque sous-chaîne
+	    output[i] = (char *) malloc(sepCountIndexes[i] - currentIndex);
+	    
+	    int newCutIndex = 0;
+        for (int j = currentIndex; j < sepCountIndexes[i]; j++) {
+            output[i][newCutIndex] = s[j];
+            newCutIndex++;
+        }
+        
+        currentIndex = sepCountIndexes[i] + 1;
+	}
+	
+	output[sepCount] = NULL;  // Terminer le tableau de pointeurs par un pointeur NULL
+	return output;
+}
+
+int main(int argc, char *argv[])
+{
+    // Appeler la fonction strsplit pour diviser la première chaîne en fonction du deuxième caractère (séparateur)
+    char **splitted = strsplit(argv[1], *(argv[2]));
+    
+    int index = 0;
+    while (splitted[index] != NULL) 
+    {
+        printf("%s\n", splitted[index]);  // Afficher chaque sous-chaîne résultante
+        index++;
+    }
+    
+    // Libérer la mémoire allouée pour le tableau de pointeurs de chaînes
+    for (int i = 0; i < index; i++) {
+        free(splitted[i]);
+    }
+    free(splitted);
+}
+``
