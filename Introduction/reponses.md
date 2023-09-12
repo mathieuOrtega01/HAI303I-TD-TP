@@ -87,3 +87,96 @@ int main() {
 ```
 
 La fonction `getenv` permet de récupérer la valeur d'une variable d'environnement spécifique en fonction de son nom.
+
+## __Exercice 5 (TD)__
+> On souhaite écrire un programme affichant le nombre de paramètres passés à la ligne de commande, ces paramètres, ainsi que les variables d’environnement.
+> 1. Ecrire l’algorithme de ce programme.
+> 2. Ecrire le programme C correspondant
+
+1. Algorithme du programme :
+```
+Début
+    Inclure les fichiers d'en-tête (stdio.h, stdlib.h)
+    
+    Déclarer une variable argc de type entier
+    Déclarer un tableau argv de pointeurs de caractères
+    
+    // Récupérer le nombre d'arguments passés à la ligne de commande
+    argc ← Nombre d'arguments passés à la ligne de commande
+    
+    // Afficher le nombre total d'arguments
+    Afficher "Nombre de paramètres passés : ", argc - 1
+    
+    // Afficher les paramètres passés à la ligne de commande
+    Pour i allant de 1 à argc - 1 faire
+        Afficher i, ": ", argv[i]
+    Fin Pour
+    
+    // Afficher les variables d'environnement
+    Afficher "Variables d'environnement :"
+    Pour chaque variable d'environnement faire
+        Afficher variable
+    Fin Pour
+    
+Fin
+```
+
+2. Programme C correspondant :
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    // Afficher le nombre de paramètres passés à la ligne de commande
+    printf("Nombre de paramètres passés : %d\n", argc - 1);
+
+    // Afficher les paramètres passés à la ligne de commande
+    printf("Paramètres passés :\n");
+    for (int i = 1; i < argc; i++) {
+        printf("%d: %s\n", i, argv[i]);
+    }
+
+    // Afficher les variables d'environnement
+    printf("Variables d'environnement :\n");
+    extern char **environ;
+    for (int i = 0; environ[i] != NULL; i++) {
+        printf("%s\n", environ[i]);
+    }
+
+    return 0;
+}
+```
+
+## __Exercice 6 (TD)__
+> A l’aide du programme précédent, testez les possibilités du compilateur gcc en produisant :
+> — le fichier prétraité ;
+> — le fichier assembleur ;
+> — le fichier objet ;
+> Observez ces différents fichiers.
+
+Pour observer les différents fichiers générés par le compilateur GCC à partir du programme précédent, vous pouvez utiliser les options de compilation suivantes :
+
+- Pour obtenir le fichier prétraité (avec l'extension `.i`), utilisez l'option `-E` :
+
+```bash
+gcc -E nom_du_programme.c -o nom_du_programme.i
+```
+
+- Pour obtenir le fichier assembleur (avec l'extension `.s`), utilisez l'option `-S` :
+
+```bash
+gcc -S nom_du_programme.c -o nom_du_programme.s
+```
+
+- Pour obtenir le fichier objet (avec l'extension `.o`), utilisez l'option `-c` :
+
+```bash
+gcc -c nom_du_programme.c -o nom_du_programme.o
+```
+
+Vous pouvez observer le contenu de ces fichiers générés en ouvrant chaque fichier avec un éditeur de texte ou en utilisant des commandes telles que `cat` ou `less` dans un terminal.
+
+- Le fichier prétraité contient le code source après le prétraitement, c'est-à-dire après l'inclusion des fichiers d'en-tête et le remplacement des macros.
+- Le fichier assembleur contient le code en langage d'assemblage correspondant au code source C.
+- Le fichier objet est une représentation binaire du code source C prêt à être lié avec d'autres fichiers objets pour créer un exécutable final.
