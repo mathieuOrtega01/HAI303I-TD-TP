@@ -24,3 +24,52 @@ Les appels systèmes (man 2) et les fonctions de bibliothèque (man 3) sont deux
    - Les fonctions de bibliothèque (man 3) sont souvent plus faciles à utiliser pour des tâches courantes, comme la lecture et l'écriture de fichiers, sans avoir à se soucier des détails de bas niveau.
 
 En résumé, le choix entre les appels systèmes (man 2) et les fonctions de bibliothèque (man 3) dépendra de vos besoins spécifiques en matière de développement. Si vous recherchez la simplicité, la portabilité et une abstraction plus élevée, les fonctions de bibliothèque sont généralement préférables. Si vous avez besoin de performances maximales ou de contrôle précis sur les opérations E/S, les appels systèmes peuvent être la meilleure option.
+
+## __Exercice 18 (TD/TP)__
+> On souhaite compter les caractères d’un fichier passé en argument à la ligne de commande en utilisant des
+appels systèmes (wc -c).
+> 1. Ecrire un algorithme
+> 2. Ecrire le programme C correspondant.
+
+__Algorithme__
+```
+Fonction main(argc, argv)
+    Si argc > 2 Alors
+        Afficher "Vous devez saisir un argument"
+    Sinon
+        nom_fichier <- argv[1]
+        Déclarer une chaîne de caractères commande
+        Formatter commande avec "wc " + nom_fichier
+        resultat <- Appeler la fonction système avec la commande
+        Si resultat est égal à -1 Alors
+            Afficher "Erreur lors de l'exécution de la commande wc"
+            Quitter avec un code d'échec
+        Fin Si
+    Fin Si
+Fin Fonction
+``` 
+
+__Code__
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+	if (argc > 2) {
+        	printf("Vous devez saisir un argument\n");
+    	} else {
+    		const char *nom_fichier = argv[1];
+
+    		// Utilisation de la fonction system pour appeler wc
+    		char commande[100]; // Chaîne pour stocker la commande
+    		snprintf(commande, sizeof(commande), "wc %s", nom_fichier);
+
+    		int resultat = system(commande);
+
+    		if (resultat == -1) {
+        		perror("Erreur lors de l'exécution de la commande wc");
+        		exit(EXIT_FAILURE);
+   		 }
+    	}
+}
+```
