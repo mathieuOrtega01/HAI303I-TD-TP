@@ -1,4 +1,4 @@
-## __Exercice 10 (TD)__
+## __Exercice 17 (TD)__
 > Quelles différences existent entre l’utilisation d’appels systèmes man 2 (open, read, close) ou bien des fonctions
 de bibliothèque man 3 (fopen, fprintf, ...) ?
 
@@ -73,3 +73,41 @@ int main(int argc, char *argv[]) {
     	}
 }
 ```
+
+## __Exercice 19 (TD/TP)__
+> On souhaite refaire l’exercice précédent en utilisant des fonctions de bibliothèque. Que faut-il faire ? Faites-le
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+	if (argc > 2) {
+        	printf("Vous devez saisir un argument\n");
+    	} else {
+    		char *nom_fichier = argv[1];
+
+    		FILE *f;
+    		f=fopen(nom_fichier, "r");
+    		
+    		char c;
+    		int lineCount = 0;
+    		int wordCount = 0;
+    		int characterCount = 0;
+    		
+    		while((c=fgetc(f))!=EOF){
+    			if (c == '\n') {
+    				lineCount++;
+    			} else if (c == ' ') {
+    				wordCount++;
+    			}
+    			
+        		characterCount++;
+    		}
+    		
+    		fclose(f);
+    		
+    		printf("%d %d %d %s\n", lineCount, wordCount, characterCount, argv[1]);
+    	}
+}
+``
