@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-## __Exercices 11__
+## __Exercices 12__
 > Ces algorithmes de conversion (entier vers chaîne, chaîne vers flottant, . . .) sont-ils fréquemment employés ?
 Précisez à quelles occasions
 
