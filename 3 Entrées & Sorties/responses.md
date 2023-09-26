@@ -110,4 +110,165 @@ int main(int argc, char *argv[]) {
     		printf("%d %d %d %s\n", lineCount, wordCount, characterCount, argv[1]);
     	}
 }
-``
+```
+
+## __Exercice 20 (TD/TP)__
+> On souhaite écrire un programme monhead qui ne rejette que les n premières lignes d’un fichier. Par exemple :
+head -3 monfic.txt
+Cette commande permet d’afficher les 3 premières lignes du fichier monfic.txt.
+> 1. Qu’est-ce qu’une ligne ? Faut-il utiliser appel système ou fonction de bibliothèque ?
+> 2. Ecrire un algorithme
+> 3. Ecrire le programme C correspondant.
+> 4. l’option -c43 de head permet de lire les 43 premiers caractères. Implémenter cette option
+
+le char '\n' délimite la ligne et sert de point d'arrêt pour une ligne
+
+__Algorithme__
+```
+Fonction main(argc, argv)
+    Si argc n'est pas égal à 3 Alors
+        Afficher un message d'erreur expliquant l'usage correct du programme
+        Retourner EXIT_FAILURE
+    Fin Si
+
+    argument1 <- argv[1]
+    nom_fichier <- argv[2]
+
+    f <- Ouvrir le fichier nom_fichier en mode lecture
+    Si f est égal à NULL Alors
+        Afficher un message d'erreur indiquant l'échec de l'ouverture du fichier
+        Retourner EXIT_FAILURE
+    Fin Si
+
+    lineCount <- 0
+    wordCount <- 0
+    characterCount <- 0
+
+    Si le premier caractère de argument1 est '-' Alors
+        Si le deuxième caractère de argument1 est 'c' Alors
+            maxCharacter <- 0
+            index <- 2
+            Tant que argument1[index] n'est pas '\0' Faire
+                Si argument1[index] est un chiffre Alors
+                    Mettre à jour maxCharacter en convertissant argument1[index] en entier
+                Sinon
+                    Afficher un message d'erreur indiquant un argument non valide
+                    Fermer le fichier f
+                    Retourner EXIT_FAILURE
+                Fin Si
+                Incrémenter index de 1
+            Fin Tant Que
+
+            Tant que (lire le caractère c à partir du fichier f n'est pas EOF) ET (characterCount n'est pas égal à maxCharacter) Faire
+                Si c est un saut de ligne Alors
+                    Incrémenter lineCount de 1
+                Sinon Si c est un espace Alors
+                    Incrémenter wordCount de 1
+                Fin Si
+                Incrémenter characterCount de 1
+                Afficher le caractère c
+            Fin Tant Que
+
+            Afficher un saut de ligne
+        Sinon
+            maxLine <- Convertir argument1 en entier et inverser son signe
+            Tant que (lire le caractère c à partir du fichier f n'est pas EOF) ET (lineCount n'est pas égal à maxLine) Faire
+                Si c est un saut de ligne Alors
+                    Incrémenter lineCount de 1
+                Sinon Si c est un espace Alors
+                    Incrémenter wordCount de 1
+                Fin Si
+                Incrémenter characterCount de 1
+                Afficher le caractère c
+            Fin Tant Que
+        Fin Si
+    Sinon
+        Afficher un message d'erreur indiquant un argument non valide
+        Fermer le fichier f
+        Retourner EXIT_FAILURE
+    Fin Si
+
+    Fermer le fichier f
+    Retourner EXIT_SUCCESS
+Fin Fonction
+```
+__Code__
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <-x | -cx> <nom_fichier>\n", argv[0]);
+	fprintf(stderr, "   -x  : Lire le nombre de lignes du fichier (où x est un nombre)\n");
+	fprintf(stderr, "   -cx : Lire le nombre de caractères du fichier (où x est un nombre)\n");
+        return EXIT_FAILURE;
+    }
+
+    char *argument1 = argv[1];
+    char *nom_fichier = argv[2];
+
+    FILE *f = fopen(nom_fichier, "r");
+    if (f == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+        return EXIT_FAILURE;
+    }
+
+    char c;
+    int lineCount = 0;
+    int wordCount = 0;
+    int characterCount = 0;
+
+    if (argument1[0] == '-') {
+        if (argument1[1] == 'c') {
+            int maxCharacter = 0;
+            int index = 2;
+
+            while (argument1[index] != '\0') {
+                if (argument1[index] >= '0' && argument1[index] <= '9') {
+                    maxCharacter = maxCharacter * 10 + (argument1[index] - '0');
+                } else {
+                    fprintf(stderr, "Argument non valide : %s\n", argument1);
+                    fclose(f);
+                    return EXIT_FAILURE;
+                }
+
+                index++;
+            }
+
+            while ((c = fgetc(f)) != EOF && characterCount != maxCharacter) {
+                if (c == '\n') {
+                    lineCount++;
+                } else if (c == ' ') {
+                    wordCount++;
+                }
+
+                characterCount++;
+                printf("%c", c);
+            }
+
+            printf("\n");
+        } else {
+            int maxLine = atoi(argument1) * -1;
+
+            while ((c = fgetc(f)) != EOF && lineCount != maxLine) {
+                if (c == '\n') {
+                    lineCount++;
+                } else if (c == ' ') {
+                    wordCount++;
+                }
+
+                characterCount++;
+                printf("%c", c);
+            }
+        }
+    } else {
+        fprintf(stderr, "Argument non valide : %s\n", argument1);
+        fclose(f);
+        return EXIT_FAILURE;
+    }
+
+    fclose(f);
+    return EXIT_SUCCESS;
+}
+```
