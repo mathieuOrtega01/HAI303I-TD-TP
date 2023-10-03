@@ -392,3 +392,260 @@ int main(int argc, char *argv[])
 }
 
 ```
+
+## __Exercice 26 (TP)__
+> On souhaite écrire un filtre montail qui ne rejette que les n dernières lignes d’un fichier avec la syntaxe suivante : tail [-n number] [file]
+> 1. Quelle structure de données nécessite ce programme ? Décrivez précisément cette structure de données !
+> 2. Ecrire un algorithme
+> 3. Ecrire le programme C correspondant.
+
+Pour implémenter un filtre montail qui ne rejette que les n dernières lignes d'un fichier, vous pouvez utiliser une structure de file (file d'attente) pour stocker les lignes lues du fichier. Une file est une structure de données de type FIFO (First-In-First-Out), ce qui signifie que les éléments sont ajoutés à la fin et retirés du début. Chaque élément de la file peut être une chaîne de caractères représentant une ligne du fichier.
+
+__Algorithme__
+```
+PROCEDURE initQueue(queue: LineQueue)
+    queue.front <- -1
+    queue.rear <- -1
+END PROCEDURE
+
+PROCEDURE enqueue(queue: LineQueue, line: STRING)
+    IF (queue.rear + 1) MOD MAX_LINES = queue.front THEN
+        // La file est pleine, défilez l'élément le plus ancien
+        FREE(queue.lines[queue.front])
+        queue.front <- (queue.front + 1) MOD MAX_LINES
+    END IF
+
+    // Ajoutez la nouvelle ligne à la file
+    queue.rear <- (queue.rear + 1) MOD MAX_LINES
+    queue.lines[queue.rear] <- strdup(line)
+END PROCEDURE
+
+PROCEDURE printQueue(queue: LineQueue)
+    i <- queue.front
+    WHILE i ≠ queue.rear DO
+        OUTPUT(queue.lines[i])
+        i <- (i + 1) MOD MAX_LINES
+    END WHILE
+    OUTPUT(queue.lines[i])
+END PROCEDURE
+
+PROCEDURE freeQueue(queue: LineQueue)
+    i <- queue.front
+    WHILE i ≠ queue.rear DO
+        FREE(queue.lines[i])
+        i <- (i + 1) MOD MAX_LINES
+    END WHILE
+    FREE(queue.lines[i])
+END PROCEDURE
+
+PROCEDURE main(argc: INTEGER, argv: ARRAY OF STRING)
+    IF argc < 2 THEN
+        OUTPUT("Usage: ", argv[0], " [-n number] [file]")
+        EXIT(EXIT_FAILURE)
+    END IF
+
+    num <- 10 // Valeur par défaut
+    filename <- NULL
+
+    // Analyse des arguments
+    FOR i FROM 1 TO argc - 1 DO
+        IF strcmp(argv[i], "-n") = 0 THEN
+            IF i + 1 < argc THEN
+                num <- atoi(argv[i + 1])
+                IF num <= 0 THEN
+                    OUTPUT("Le nombre doit être un entier positif.")
+                    EXIT(EXIT_FAILURE)
+                END IF
+                i <- i + 1 // Passer à l'argument suivant
+            ELSE
+                OUTPUT("Option -n requiert un argument.")
+                EXIT(EXIT_FAILURE)
+            END IF
+        ELSE
+            filename <- argv[i]
+        END IF
+    END FOR
+
+    IF filename = NULL THEN
+        OUTPUT("Aucun fichier spécifié.")
+        EXIT(EXIT_FAILURE)
+    END IF
+
+    file <- fopen(filename, "r")
+    IF file = NULL THEN
+        PERROR("Erreur lors de l'ouverture du fichier")
+        EXIT(EXIT_FAILURE)
+    END IF
+
+    DECLARE queue: LineQueue
+    initQueue(queue)
+
+    DECLARE buffer[256]: STRING // Suppose une limite de 255 caractères par ligne, ajustez selon vos besoins
+
+    // Lire les lignes du fichier et les ajouter à la file
+    WHILE fgets(buffer, sizeof(buffer), file) ≠ NULL DO
+        enqueue(queue, buffer)
+    END WHILE
+
+    // Imprimer les n dernières lignes
+    printQueue(queue)
+
+    // Libérer la mémoire utilisée par la file
+    freeQueue(queue)
+
+    fclose(file)
+
+    EXIT(EXIT_SUCCESS)
+END PROCEDURE
+```
+__Code__
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_LINES 1000
+
+// Structure de file
+typedef struct {
+    char *lines[MAX_LINES];
+    int front, rear;
+} LineQueue;
+
+// Initialiser la file
+void initQueue(LineQueue *queue) {
+    queue->front = queue->rear = -1;
+}
+
+// Ajouter une ligne à la file
+void enqueue(LineQueue *queue, const char *line) {
+    if ((queue->rear + 1) % MAX_LINES == queue->front) {
+        // La file est pleine, défilez l'élément le plus ancien
+        free(queue->lines[queue->front]);
+        queue->front = (queue->front + 1) % MAX_LINES;
+    }
+
+    // Ajoutez la nouvelle ligne à la file
+    queue->rear = (queue->rear + 1) % MAX_LINES;
+    queue->lines[queue->rear] = strdup(line);
+}
+
+// Imprimer les lignes dans la file
+void printQueue(LineQueue *queue) {
+    int i = queue->front;
+    while (i != queue->rear) {
+        printf("%s\n", queue->lines[i]);
+        i = (i + 1) % MAX_LINES;
+    }
+    printf("%s\n", queue->lines[i]);
+}
+
+// Libérer la mémoire utilisée par la file
+void freeQueue(LineQueue *queue) {
+    int i = queue->front;
+    while (i != queue->rear) {
+        free(queue->lines[i]);
+        i = (i + 1) % MAX_LINES;
+    }
+    free(queue->lines[i]);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s [-n number] [file]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    int num = 10; // Valeur par défaut
+    const char *filename = NULL;
+
+    // Analyse des arguments
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-n") == 0) {
+            if (i + 1 < argc) {
+                num = atoi(argv[i + 1]);
+                if (num <= 0) {
+                    fprintf(stderr, "Le nombre doit être un entier positif.\n");
+                    return EXIT_FAILURE;
+                }
+                i++; // Passer à l'argument suivant
+            } else {
+                fprintf(stderr, "Option -n requiert un argument.\n");
+                return EXIT_FAILURE;
+            }
+        } else {
+            filename = argv[i];
+        }
+    }
+
+    if (filename == NULL) {
+        fprintf(stderr, "Aucun fichier spécifié.\n");
+        return EXIT_FAILURE;
+    }
+
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+        return EXIT_FAILURE;
+    }
+
+    LineQueue queue;
+    initQueue(&queue);
+
+    char buffer[256]; // Suppose une limite de 255 caractères par ligne, ajustez selon vos besoins
+
+    // Lire les lignes du fichier et les ajouter à la file
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        enqueue(&queue, buffer);
+    }
+
+    // Imprimer les n dernières lignes
+    printQueue(&queue);
+
+    // Libérer la mémoire utilisée par la file
+    freeQueue(&queue);
+
+    fclose(file);
+
+    return EXIT_SUCCESS;
+}
+```
+## __Exercice 27 (TD)__
+Etudiez le programme suivant : programme testaffichint.c
+```c
+#include <stdio.h> /* printf */
+int main(int argc, char *argv[], char *env[]) {
+int i=12345;
+printf("%4.0d\n",i);
+fwrite(&i,sizeof(int),1,stdout);
+}
+```
+> L’affichage obtenu est le suivant :
+> $testaffichint
+> 12345
+> 90 $
+> 1. Quelle différence esiste-t-il entre ces deux affichages ?
+> 2. Précisez la valeur de 90__. Quel est le “boutisme” (endianness) de cette machine ?
+> 3. Quels avantages et inconvénients de ces types de codage dans les fichiers en matière de sauvegarde de
+données ?
+
+1. Différence entre les deux affichages :
+   - L'affichage "12345" est produit par la fonction `printf("%4.0d\n", i);`, où `%4.0d` spécifie que l'entier `i` doit être affiché avec un champ de largeur minimale de 4 caractères, sans chiffres après la virgule.
+   - L'affichage "90 $" est produit par `fwrite(&i, sizeof(int), 1, stdout);`, où le programme écrit la représentation binaire de l'entier `i` dans le fichier de sortie (`stdout` ici).
+
+2. Valeur de 90 et Endianness :
+   - La valeur "90" est la représentation ASCII du caractère `Z` en décimal.
+   - La différence entre l'affichage "12345" et "90 $" suggère une différence d'ordre des octets endianness.
+   - La valeur 12345 en mémoire est stockée comme une séquence d'octets, et selon le boutisme de la machine, ces octets peuvent être ordonnés de différentes manières.
+   - La valeur "90 $" suggère que sur cette machine, l'octet le moins significatif est stocké en premier little-endian. Cela signifie que les octets sont stockés de droite à gauche, le moins significatif d'abord.
+
+3. Avantages et Inconvénients des Types de Codage dans les Fichiers :
+   - Avantages :
+     - Little-Endian : Il est souvent plus simple à mettre en œuvre et est le format natif de nombreuses architectures. Les processeurs Intel x86, par exemple, utilisent little-endian
+     - Big-Endian : Il facilite la lecture humaine des données binaires et est parfois utilisé pour la communication entre différentes architectures.
+
+   - Inconvénients :
+     - Little-Endian : Peut poser des problèmes lors de l'échange de données entre systèmes avec des boutismes différents.
+     - Big-Endian : L'écriture et la lecture nécessitent souvent des opérations de manipulation des octets.
+
+   - Choix : Le choix entre little endian et big endian dépend souvent des conventions et des architectures utilisées dans un contexte donné. Les protocoles de communication et les formats de fichiers spécifient généralement l'ordre des octets pour assurer l'interopérabilité entre différentes plates-formes.
